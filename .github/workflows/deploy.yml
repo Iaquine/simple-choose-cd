@@ -19,6 +19,11 @@ jobs:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+    - name: Debug Secrets
+      run: echo "Username"
+      env:
+        DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+
     - name: Construir imagem Docker
       run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/simple-choose-app -f Dockerfile.dev .
 
