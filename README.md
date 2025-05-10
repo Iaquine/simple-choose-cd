@@ -1,5 +1,5 @@
 
-# api-Should-I-go
+# simple-choose-cd
 
 Projeto que sobe um Container e, neste, uma API RESTful com o Swagger.
 
