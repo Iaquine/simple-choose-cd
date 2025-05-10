@@ -2,25 +2,32 @@ name: Docker Deploy
 
 on:
   push:
-    branches:
-      - main
+    branches: [master]
+
+env:
+  # Variáveis seguras (não sensíveis)
+  IMAGE_NAME: 'simple-choose-app'
+  TAG: 'latest'
 
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
-
+    
     steps:
-    - name: Checkout do código
-      uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    - name: Login no Docker Hub
-      uses: docker/login-action@v3
-      with:
-        username: ${{ secrets.DOCKERHUB_USERNAME }}
-        password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}  # 👈 Usuário vem de secrets
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
-    - name: Construir imagem Docker
-      run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/simple-choose-app -f Dockerfile.dev .
+      - name: Build Docker image
+        run: |
+          docker build \
+            -t ${{ secrets.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:${{ env.TAG }} \
+            -f Dockerfile.dev .
 
-    - name: Enviar imagem para o Docker Hub
-      run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/simple-choose-app
+      - name: Push to Docker Hub
+        run: docker push ${{ secrets.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:${{ env.TAG }}
