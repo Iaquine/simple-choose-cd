@@ -1,41 +1,24 @@
 FROM centos/python-38-centos7
 USER root
 
-# Variáveis de ambiente para configuração do Gunicorn
+# Variáveis de ambiente
 ENV GUNICORN_WORKERS=2 \
     GUNICORN_TIMEOUT=300 \
-    GUNICORN_THREADS=2 \
-    GUNICORN_LOGLEVEL=info \
-    STATSD_PREFIX=app_metrics \
-    VERSAO=1.0.1 \
-    CMAKE_C_COMPILER=/usr/bin/gcc \
-    CMAKE_CXX_COMPILER=/usr/bin/g++
+    VERSAO=1.0.1
 
-# Cria a estrutura de diretórios necessária
-RUN mkdir -p /code/service/config
-
-# Instalação de dependências básicas
-RUN pip install --no-cache-dir --upgrade pip==20.2.3 && \
-    pip install --no-cache-dir --upgrade setuptools==50.3.0
+# Cria estrutura de diretórios
+RUN mkdir -p /code/service
 
 WORKDIR /code
 
-# Copia os arquivos necessários mantendo a estrutura
-COPY setup.py .
-COPY arvore_model2.pkl .
-COPY service ./service
+# Copia APENAS os arquivos necessários
+COPY core-swagger-api/setup.py .
+COPY core-swagger-api/arvore_model2.pkl .
+COPY core-swagger-api/service ./service
 
-# Instalação de dependências do aplicativo
-RUN pip3 install pandas && \
-    pip3 install gunicorn && \
+# Instala dependências
+RUN pip install --no-cache-dir --upgrade pip==20.2.3 setuptools==50.3.0 && \
+    pip3 install pandas gunicorn && \
     pip3 install -e .[dev]
 
-# Configura permissões
-RUN chmod -R +x /code && \
-    chmod +x /code/service/config/config.py
-
-# Saúde da aplicação (opcional)
-HEALTHCHECK --interval=30s --timeout=3s \
-  CMD curl -f http://localhost:9000/health || exit 1
-
-CMD ["gunicorn", "--config", "/code/service/config/config.py", "service:app"]
+CMD ["gunicorn", "--config", "/code/service/config/config.py", "service.service:app"]
