@@ -44,7 +44,7 @@ jobs:
         run: |
           docker build \
             -t ${{ secrets.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:${{ env.TAG }} \
-            -f Dockerfile.dev .
+            -f core-swagger-api/Dockerfile.dev .  
 
       # Passo 5: Push da imagem
       - name: Push Docker image
