@@ -1,38 +1,41 @@
 FROM centos/python-38-centos7
 USER root
 
-# Defina a variável BOM_PATH se for usada posteriormente
-ARG BOM_PATH=/code
-
-# Versionador de bibliotecas do Python
-RUN pip install --no-cache-dir --upgrade pip==20.2.3
-
-# Biblioteca usada para instalação de requisitos
-RUN pip install --no-cache-dir --upgrade setuptools==50.3.0
-
-ENV VERSAO=1.0.1 \
+# Variáveis de ambiente para configuração do Gunicorn
+ENV GUNICORN_WORKERS=2 \
+    GUNICORN_TIMEOUT=300 \
+    GUNICORN_THREADS=2 \
+    GUNICORN_LOGLEVEL=info \
+    STATSD_PREFIX=app_metrics \
+    VERSAO=1.0.1 \
     CMAKE_C_COMPILER=/usr/bin/gcc \
     CMAKE_CXX_COMPILER=/usr/bin/g++
 
-# Cria o diretório de trabalho primeiro
+# Cria a estrutura de diretórios necessária
+RUN mkdir -p /code/service/config
+
+# Instalação de dependências básicas
+RUN pip install --no-cache-dir --upgrade pip==20.2.3 && \
+    pip install --no-cache-dir --upgrade setuptools==50.3.0
+
 WORKDIR /code
 
-# Copia arquivos mantendo estrutura relativa
-COPY ./setup.py .
-COPY ./arvore_model2.pkl .
-COPY ./service ./service
+# Copia os arquivos necessários mantendo a estrutura
+COPY setup.py .
+COPY arvore_model2.pkl .
+COPY service ./service
 
-# Instala dependências
-RUN pip3 install pandas
-RUN pip3 install -e .[dev]
+# Instalação de dependências do aplicativo
+RUN pip3 install pandas && \
+    pip3 install gunicorn && \
+    pip3 install -e .[dev]
 
-# Se realmente precisar copiar o próprio Dockerfile
-COPY Dockerfile.dev ${BOM_PATH}/
+# Configura permissões
+RUN chmod -R +x /code && \
+    chmod +x /code/service/config/config.py
 
-# Configurações (verifique se o caminho existe)
-COPY ./service/config ./config
+# Saúde da aplicação (opcional)
+HEALTHCHECK --interval=30s --timeout=3s \
+  CMD curl -f http://localhost:9000/health || exit 1
 
-# Permissões
-RUN chmod -R +x /code
-
-CMD ["python3", "-m", "service"]
+CMD ["gunicorn", "--config", "/code/service/config/config.py", "service:app"]
