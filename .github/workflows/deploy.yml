@@ -17,11 +17,20 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # Passo 2: Debug - Verificar secrets (pode remover depois)
+      # Passo 2: Debug simplificado
       - name: Verify secrets
         run: |
-          echo "DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME != '' ? '***SET***' : 'NOT SET!' }}"
-          echo "DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD != '' ? '***SET***' : 'NOT SET!' }}"
+          if [ -z "${{ secrets.DOCKER_USERNAME }}" ]; then
+            echo "DOCKER_USERNAME: NOT SET!"
+          else
+            echo "DOCKER_USERNAME: ***SET***"
+          fi
+          
+          if [ -z "${{ secrets.DOCKER_PASSWORD }}" ]; then
+            echo "DOCKER_PASSWORD: NOT SET!"
+          else
+            echo "DOCKER_PASSWORD: ***SET***"
+          fi
 
       # Passo 3: Login no Docker Hub
       - name: Login to Docker Hub
